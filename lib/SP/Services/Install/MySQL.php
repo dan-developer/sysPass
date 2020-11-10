@@ -120,7 +120,7 @@ final class MySQL implements DatabaseSetupInterface
 
             $sth->execute([
                 $user,
-                $this->installData->getDbAuthHost(),
+                '%',
                 $this->installData->getDbAuthHostDns()
             ]);
 
@@ -167,11 +167,7 @@ final class MySQL implements DatabaseSetupInterface
 
             $dbc = $this->mysqlHandler->getConnectionSimple();
 
-            $dbc->exec(sprintf($query, $dbc->quote($user), $this->installData->getDbAuthHost(), $dbc->quote($pass)));
-
-            if ($this->installData->getDbAuthHost() !== $this->installData->getDbAuthHostDns()) {
-                $dbc->exec(sprintf($query, $dbc->quote($user), $this->installData->getDbAuthHostDns(), $dbc->quote($pass)));
-            }
+            $dbc->exec(sprintf($query, $dbc->quote($user), '%', $dbc->quote($pass)));
 
             $dbc->exec('FLUSH PRIVILEGES');
         } catch (PDOException $e) {
@@ -221,11 +217,7 @@ final class MySQL implements DatabaseSetupInterface
             try {
                 $query = 'GRANT ALL PRIVILEGES ON `%s`.* TO %s@`%s`';
 
-                $dbc->exec(sprintf($query, $this->installData->getDbName(), $dbc->quote($this->configData->getDbUser()), $this->installData->getDbAuthHost()));
-
-                if ($this->installData->getDbAuthHost() !== $this->installData->getDbAuthHostDns()) {
-                    $dbc->exec(sprintf($query, $this->installData->getDbName(), $dbc->quote($this->configData->getDbUser()), $this->installData->getDbAuthHostDns()));
-                }
+                $dbc->exec(sprintf($query, $this->installData->getDbName(), $dbc->quote($this->configData->getDbUser()), '%'));
 
                 $dbc->exec('FLUSH PRIVILEGES');
             } catch (PDOException $e) {
@@ -284,11 +276,7 @@ final class MySQL implements DatabaseSetupInterface
             }
         } else {
             $dbc->exec('DROP DATABASE IF EXISTS `' . $this->installData->getDbName() . '`');
-            $dbc->exec('DROP USER ' . $dbc->quote($this->configData->getDbUser()) . '@`' . $this->installData->getDbAuthHost() . '`');
-
-            if ($this->installData->getDbAuthHost() !== $this->installData->getDbAuthHostDns()) {
-                $dbc->exec('DROP USER ' . $dbc->quote($this->configData->getDbUser()) . '@`' . $this->installData->getDbAuthHostDns() . '`');
-            }
+            $dbc->exec('DROP USER ' . $dbc->quote($this->configData->getDbUser()) . '@`%`');
         }
 
         logger('Rollback');

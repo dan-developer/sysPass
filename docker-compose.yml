@@ -1,0 +1,35 @@
+version: '2.4'
+services:
+  app:
+    container_name: syspass-app
+    build:
+      context: .
+      dockerfile: ./compose/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "1001:80"
+    depends_on:
+      - db
+    volumes:
+      - .:/var/www/html/sysPass
+
+  db:
+    container_name: syspass-db
+    restart: unless-stopped
+    image: mariadb:10.2
+    environment:
+      - MYSQL_ROOT_PASSWORD=syspass
+    volumes:
+      - ./db-data:/var/lib/mysql
+
+  phpmyadmin:
+    container_name: syspass-phpmyadmin
+    restart: unless-stopped
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: syspass-db
+    ports:
+      - '1007:80'
+
+volumes:
+  db-data:
