@@ -32,6 +32,8 @@ ENV APACHE_RUN_USER="www-data" \
     SYSPASS_UID=9001 \
     SYSPASS_DEV=0
 
+RUN mkdir -p ${SYSPASS_DIR}
+
 WORKDIR ${SYSPASS_DIR}
 
 LABEL build=19030701
@@ -40,7 +42,7 @@ LABEL build=19030701
 COPY ["compose/syspass.conf", "/etc/apache2/sites-available/"]
 
 # Xdebug module config
-COPY compose/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+#COPY compose/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 # Custom entrypoint
 COPY compose/entrypoint.sh /usr/local/sbin/
@@ -53,10 +55,9 @@ RUN chmod 755 /usr/local/sbin/entrypoint.sh \
   && ln -sf /dev/stdout ${APACHE_LOG_DIR}/access.log \
   && ln -sf /dev/stderr ${APACHE_LOG_DIR}/error.log
 
-# sysPass dependencies
-COPY composer.json ${SYSPASS_DIR}/
-
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+
+ADD ./composer.json ${SYSPASS_DIR}
 
 RUN /usr/bin/composer install \
       --ignore-platform-reqs \
@@ -64,8 +65,7 @@ RUN /usr/bin/composer install \
       --no-plugins \
       --no-scripts \
       --prefer-dist \
-      --optimize-autoloader \
-      --working-dir ${SYSPASS_DIR}
+      --optimize-autoloader
 
 EXPOSE 80 443
 
